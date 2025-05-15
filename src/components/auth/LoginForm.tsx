@@ -1,148 +1,93 @@
-import React, { useState, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
-import { useFormik } from 'formik';
-import * as yup from 'yup';
+import React, { useState } from 'react';
 import {
     Box,
     Button,
     TextField,
     Typography,
     Container,
-    Alert,
     Paper,
+    Alert,
     Link,
-    Stack,
 } from '@mui/material';
+import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../../contexts/AuthContext';
 
-const validationSchema = yup.object({
-    email: yup
-        .string()
-        .email('Enter a valid email')
-        .required('Email is required'),
-    password: yup
-        .string()
-        .required('Password is required'),
-});
-
 export const LoginForm: React.FC = () => {
-    const navigate = useNavigate();
-    const { login, user, logout } = useAuth();
+    const [email, setEmail] = useState('');
+    const [password, setPassword] = useState('');
     const [error, setError] = useState<string | null>(null);
+    const [loading, setLoading] = useState(false);
+    const navigate = useNavigate();
+    const { login } = useAuth();
 
-    const formik = useFormik({
-        initialValues: {
-            email: '',
-            password: '',
-        },
-        validationSchema: validationSchema,
-        onSubmit: async (values) => {
-            try {
-                setError(null);
-                await login(values.email, values.password);
-            } catch (err: any) {
-                console.error('Login error:', err);
-                setError(err.message || 'An error occurred during login');
-            }
-        },
-    });
-
-    useEffect(() => {
-        if (user) {
-            if (user.role === 'CREATOR') {
-                navigate('/creator');
-            } else if (user.role === 'BRAND') {
-                navigate('/brand');
-            } else {
-                // Handle unknown role or show error
-                setError('Invalid user role');
-                logout();
-            }
+    const handleSubmit = async (e: React.FormEvent) => {
+        e.preventDefault();
+        try {
+            setError(null);
+            setLoading(true);
+            await login(email, password);
+            // Note: The login function will handle the navigation based on user role
+        } catch (err: any) {
+            setError(err.message);
+        } finally {
+            setLoading(false);
         }
-    }, [user, navigate]);
+    };
 
     return (
         <Container component="main" maxWidth="xs">
             <Box
                 sx={{
-                    minHeight: '100vh',
+                    marginTop: 8,
                     display: 'flex',
                     flexDirection: 'column',
                     alignItems: 'center',
-                    justifyContent: 'center',
                 }}
             >
-                <Paper
-                    elevation={0}
-                    sx={{
-                        padding: 4,
-                        display: 'flex',
-                        flexDirection: 'column',
-                        alignItems: 'center',
-                        width: '100%',
-                    }}
-                >
-                    <Box
-                        component="img"
-                        src="/Logo.png"
-                        alt="Netwrkly Logo"
-                        sx={{
-                            width: 120,
-                            height: 'auto',
-                            mb: 3,
-                        }}
-                    />
-                    <Typography component="h1" variant="h4" gutterBottom sx={{ fontWeight: 700 }}>
-                        Welcome back
-                    </Typography>
-                    <Typography variant="body1" color="text.secondary" sx={{ mb: 4 }}>
-                        Sign in to continue to Netwrkly
+                <Paper elevation={3} sx={{ p: 4, width: '100%' }}>
+                    <Typography component="h1" variant="h5" align="center" gutterBottom>
+                        Sign In
                     </Typography>
                     {error && (
-                        <Alert severity="error" sx={{ mb: 2, width: '100%' }}>
+                        <Alert severity="error" sx={{ mb: 2 }}>
                             {error}
                         </Alert>
                     )}
-                    <Box
-                        component="form"
-                        onSubmit={formik.handleSubmit}
-                        sx={{ width: '100%' }}
-                    >
-                        <Stack spacing={2}>
-                            <TextField
-                                fullWidth
-                                id="email"
-                                label="Email"
-                                name="email"
-                                autoComplete="email"
-                                autoFocus
-                                value={formik.values.email}
-                                onChange={formik.handleChange}
-                                error={formik.touched.email && Boolean(formik.errors.email)}
-                                helperText={formik.touched.email && formik.errors.email}
-                            />
-                            <TextField
-                                fullWidth
-                                name="password"
-                                label="Password"
-                                type="password"
-                                id="password"
-                                autoComplete="current-password"
-                                value={formik.values.password}
-                                onChange={formik.handleChange}
-                                error={formik.touched.password && Boolean(formik.errors.password)}
-                                helperText={formik.touched.password && formik.errors.password}
-                            />
-                            <Button
-                                type="submit"
-                                fullWidth
-                                variant="contained"
-                                size="large"
-                            >
-                                Sign In
-                            </Button>
-                        </Stack>
-                        <Box sx={{ mt: 3, textAlign: 'center' }}>
+                    <Box component="form" onSubmit={handleSubmit} sx={{ mt: 1 }}>
+                        <TextField
+                            margin="normal"
+                            required
+                            fullWidth
+                            id="email"
+                            label="Email Address"
+                            name="email"
+                            autoComplete="email"
+                            autoFocus
+                            value={email}
+                            onChange={(e) => setEmail(e.target.value)}
+                        />
+                        <TextField
+                            margin="normal"
+                            required
+                            fullWidth
+                            name="password"
+                            label="Password"
+                            type="password"
+                            id="password"
+                            autoComplete="current-password"
+                            value={password}
+                            onChange={(e) => setPassword(e.target.value)}
+                        />
+                        <Button
+                            type="submit"
+                            fullWidth
+                            variant="contained"
+                            sx={{ mt: 3, mb: 2 }}
+                            disabled={loading}
+                        >
+                            {loading ? 'Signing In...' : 'Sign In'}
+                        </Button>
+                        <Box sx={{ mt: 2, textAlign: 'center' }}>
                             <Typography variant="body2" color="text.secondary">
                                 Don't have an account?{' '}
                                 <Link
