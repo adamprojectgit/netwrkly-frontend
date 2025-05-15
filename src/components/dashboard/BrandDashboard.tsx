@@ -112,7 +112,7 @@ export const BrandDashboard: React.FC = () => {
                 setBriefs(data.map(brief => ({
                     ...brief,
                     updatedAt: brief.updatedAt || brief.createdAt,
-                    creatorId: brief.creatorId || String(user?.id) || '1'
+                    creatorId: brief.creatorId || String(user?.uid) || '1'
                 })));
             } catch (err) {
                 setError('Failed to load briefs. Please try again later.');
@@ -156,7 +156,7 @@ export const BrandDashboard: React.FC = () => {
             setBriefs(prev => [{
                 ...newBrief,
                 updatedAt: newBrief.updatedAt || newBrief.createdAt,
-                creatorId: newBrief.creatorId || String(user?.id) || '1'
+                creatorId: newBrief.creatorId || String(user?.uid) || '1'
             }, ...prev]);
             setSnackbar({ open: true, message: 'Brief created successfully', severity: 'success' });
             setIsCreateBriefOpen(false);
