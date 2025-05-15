@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useFormik } from 'formik';
 import * as yup from 'yup';
@@ -27,7 +27,7 @@ const validationSchema = yup.object({
 
 export const LoginForm: React.FC = () => {
     const navigate = useNavigate();
-    const { login, user } = useAuth();
+    const { login, user, logout } = useAuth();
     const [error, setError] = useState<string | null>(null);
 
     const formik = useFormik({
@@ -47,9 +47,17 @@ export const LoginForm: React.FC = () => {
         },
     });
 
-    React.useEffect(() => {
+    useEffect(() => {
         if (user) {
-            navigate(user.role === 'CREATOR' ? '/creator' : '/brand');
+            if (user.role === 'CREATOR') {
+                navigate('/creator');
+            } else if (user.role === 'BRAND') {
+                navigate('/brand');
+            } else {
+                // Handle unknown role or show error
+                setError('Invalid user role');
+                logout();
+            }
         }
     }, [user, navigate]);
 
