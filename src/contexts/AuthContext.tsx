@@ -6,9 +6,9 @@ import {
     signOut, 
     onAuthStateChanged,
     sendEmailVerification,
-    User as FirebaseUser
+    User as FirebaseUser,
+    updateProfile
 } from 'firebase/auth';
-import { useNavigate } from 'react-router-dom';
 import axios from 'axios';
 
 const API_URL = 'https://netwrkly-backend.onrender.com/api';
@@ -21,8 +21,8 @@ interface AuthContextType {
     user: User | null;
     loading: boolean;
     error: string | null;
-    signup: (email: string, password: string) => Promise<void>;
-    login: (email: string, password: string) => Promise<void>;
+    signup: (email: string, password: string) => Promise<{ success: boolean; message: string }>;
+    login: (email: string, password: string) => Promise<{ success: boolean; role?: string; message: string }>;
     logout: () => Promise<void>;
     isEmailVerified: boolean;
 }
@@ -42,7 +42,6 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState<string | null>(null);
     const [isEmailVerified, setIsEmailVerified] = useState(false);
-    const navigate = useNavigate();
     const auth = getAuth();
 
     useEffect(() => {
@@ -77,12 +76,16 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
             // Sign out the user until they verify their email
             await signOut(auth);
             
-            // Show success message and redirect to login
-            alert('Please check your email to verify your account before logging in.');
-            navigate('/login');
+            return {
+                success: true,
+                message: 'Please check your email to verify your account before logging in.'
+            };
         } catch (err: any) {
             setError(err.message);
-            throw err;
+            return {
+                success: false,
+                message: err.message
+            };
         }
     };
 
@@ -94,30 +97,32 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
             
             if (!user.emailVerified) {
                 await signOut(auth);
-                throw new Error('Please verify your email before logging in.');
+                return {
+                    success: false,
+                    message: 'Please verify your email before logging in.'
+                };
             }
             
-            // Redirect based on user role
             const idTokenResult = await user.getIdTokenResult();
             const role = idTokenResult.claims.role as string;
             
-            if (role === 'BRAND') {
-                navigate('/brand');
-            } else if (role === 'CREATOR') {
-                navigate('/creator');
-            } else {
-                navigate('/');
-            }
+            return {
+                success: true,
+                role,
+                message: 'Login successful'
+            };
         } catch (err: any) {
             setError(err.message);
-            throw err;
+            return {
+                success: false,
+                message: err.message
+            };
         }
     };
 
     const logout = async () => {
         try {
             await signOut(auth);
-            navigate('/login');
         } catch (err: any) {
             setError(err.message);
             throw err;  
