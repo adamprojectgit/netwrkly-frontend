@@ -84,12 +84,12 @@ const theme = createTheme({
 
 const App: React.FC = () => {
   return (
-        <ThemeProvider theme={theme}>
-            <CssBaseline />
-            <AuthProvider>
-                <CreatorProfileProvider>
-                    <BrandProfileProvider>
-                        <Router>
+        <Router>
+            <ThemeProvider theme={theme}>
+                <CssBaseline />
+                <AuthProvider>
+                    <CreatorProfileProvider>
+                        <BrandProfileProvider>
                             <Routes>
                                 <Route path="/login" element={<LoginForm />} />
                                 <Route path="/register" element={<RegisterForm />} />
@@ -111,11 +111,11 @@ const App: React.FC = () => {
                                 />
                                 <Route path="/" element={<Navigate to="/login" replace />} />
                             </Routes>
-                        </Router>
-                    </BrandProfileProvider>
-                </CreatorProfileProvider>
-            </AuthProvider>
-        </ThemeProvider>
+                        </BrandProfileProvider>
+                    </CreatorProfileProvider>
+                </AuthProvider>
+            </ThemeProvider>
+        </Router>
     );
 };
 
