@@ -6,21 +6,14 @@ import {
     signOut, 
     onAuthStateChanged,
     sendEmailVerification,
-    User as FirebaseUser,
-    UserCredential
+    User as FirebaseUser
 } from 'firebase/auth';
 import { useNavigate } from 'react-router-dom';
-import { 
-    createUserWithEmailAndPassword as firebaseCreateUserWithEmailAndPassword, 
-    updateProfile,
-} from 'firebase/auth';
-import { auth } from '../config/firebase';
 import axios from 'axios';
 
 const API_URL = 'https://netwrkly-backend.onrender.com/api';
 
 interface User extends FirebaseUser {
-    id: string;
     role: string;
 }
 
@@ -58,7 +51,6 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
                 const idTokenResult = await firebaseUser.getIdTokenResult();
                 const userWithRole = {
                     ...firebaseUser,
-                    id: firebaseUser.uid,
                     role: idTokenResult.claims.role as string
                 } as User;
                 setUser(userWithRole);
@@ -145,79 +137,6 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     return (
         <AuthContext.Provider value={value}>
             {!loading && children}
-        </AuthContext.Provider>
-    );
-};
-
-export const AuthProviderOld: React.FC<{ children: React.ReactNode }> = ({ children }) => {
-    const [isAuthenticated, setIsAuthenticated] = useState(false);
-    const [user, setUser] = useState<User | null>(null);
-
-    useEffect(() => {
-        const unsubscribe = onAuthStateChanged(auth, (firebaseUser) => {
-            if (firebaseUser) {
-                // Get the role from custom claims or default to CREATOR
-                const role = (firebaseUser as any).role || 'CREATOR';
-                const userData: User = {
-                    id: firebaseUser.uid,
-                    email: firebaseUser.email || '',
-                    role: role as string,
-                    emailVerified: firebaseUser.emailVerified
-                };
-                setUser(userData);
-                setIsAuthenticated(true);
-            } else {
-                setUser(null);
-                setIsAuthenticated(false);
-            }
-        });
-
-        return () => unsubscribe();
-    }, []);
-
-    const login = async (email: string, password: string) => {
-        const userCredential = await signInWithEmailAndPassword(auth, email, password);
-        return userCredential;
-    };
-
-    const register = async (email: string, password: string, role: 'CREATOR' | 'BRAND') => {
-        try {
-            // First create the user in Firebase
-            const userCredential = await firebaseCreateUserWithEmailAndPassword(auth, email, password);
-            
-            // Get the Firebase ID token
-            const idToken = await userCredential.user.getIdToken();
-            
-            // Then create the user in your backend
-            await axios.post(`${API_URL}/auth/register`, {
-                email,
-                role,
-                firebaseUid: userCredential.user.uid
-            }, {
-                headers: {
-                    Authorization: `Bearer ${idToken}`
-                }
-            });
-
-            // Store the role in Firebase profile
-            await updateProfile(userCredential.user, {
-                displayName: role
-            });
-
-            return userCredential;
-        } catch (error: any) {
-            console.error('Registration error:', error);
-            throw error;
-        }
-    };
-
-    const logout = async () => {
-        await signOut(auth);
-    };
-
-    return (
-        <AuthContext.Provider value={{ isAuthenticated, user, login, register, logout }}>
-            {children}
         </AuthContext.Provider>
     );
 }; 
