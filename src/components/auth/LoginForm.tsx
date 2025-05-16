@@ -1,84 +1,91 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
+import { useFormik } from 'formik';
+import * as yup from 'yup';
 import {
     Box,
     Button,
     TextField,
     Typography,
     Container,
-    Paper,
     Alert,
+    Paper,
     Link,
+    Stack,
 } from '@mui/material';
 import { useAuth } from '../../contexts/AuthContext';
-import { useNavigate } from 'react-router-dom';
+
+const validationSchema = yup.object({
+    email: yup
+        .string()
+        .email('Enter a valid email')
+        .required('Email is required'),
+    password: yup
+        .string()
+        .required('Password is required'),
+});
 
 export const LoginForm: React.FC = () => {
-    const [email, setEmail] = useState('');
-    const [password, setPassword] = useState('');
+    const navigate = useNavigate();
+    const { login, user, logout } = useAuth();
     const [error, setError] = useState<string | null>(null);
     const [loading, setLoading] = useState(false);
-    const { login } = useAuth();
-    const navigate = useNavigate();
 
-    const handleSubmit = async (e: React.FormEvent) => {
-        e.preventDefault();
-        setError(null);
-        setLoading(true);
+    const formik = useFormik({
+        initialValues: {
+            email: '',
+            password: '',
+        },
+        validationSchema: validationSchema,
+        onSubmit: async (values) => {
+            try {
+                setError(null);
+                setLoading(true);
+                await login(values.email, values.password);
+            } catch (err: any) {
+                console.error('Login error:', err);
+                setError(err.message || 'An error occurred during login');
+            } finally {
+                setLoading(false);
+            }
+        },
+    });
 
-        try {
-            const result = await login(email, password);
-            if (result.success) {
-                // Navigate based on role
-                if (result.role === 'CREATOR') {
-                    navigate('/creator');
-                } else if (result.role === 'BRAND') {
-                    navigate('/brand');
-                }
+    useEffect(() => {
+        if (user) {
+            if (user.role === 'CREATOR') {
+                navigate('/creator');
+            } else if (user.role === 'BRAND') {
+                navigate('/brand');
             } else {
-                // Handle specific error cases
-                if (result.message.includes('email')) {
-                    setError('Please verify your email before logging in. Check your inbox for the verification link.');
-                } else if (result.message.includes('invalid-credential')) {
-                    setError('Invalid email or password. Please check your credentials and try again.');
-                } else if (result.message.includes('user-not-found')) {
-                    setError('No account found with this email address.');
-                } else if (result.message.includes('too-many-requests')) {
-                    setError('Too many failed login attempts. Please try again later.');
-                } else if (result.message.includes('network-request-failed')) {
-                    setError('Network error. Please check your internet connection and try again.');
-                } else {
-                    setError('Unable to sign in. Please try again.');
-                }
+                // Handle unknown role or show error
+                setError('Invalid user role');
+                logout();
             }
-        } catch (err: any) {
-            // Handle Firebase error codes
-            if (err.code === 'auth/invalid-credential') {
-                setError('Invalid email or password. Please check your credentials and try again.');
-            } else if (err.code === 'auth/user-not-found') {
-                setError('No account found with this email address.');
-            } else if (err.code === 'auth/too-many-requests') {
-                setError('Too many failed login attempts. Please try again later.');
-            } else if (err.code === 'auth/network-request-failed') {
-                setError('Network error. Please check your internet connection and try again.');
-            } else {
-                setError('An unexpected error occurred. Please try again.');
-            }
-        } finally {
-            setLoading(false);
         }
-    };
+    }, [user, navigate]);
 
     return (
         <Container component="main" maxWidth="xs">
             <Box
                 sx={{
-                    marginTop: 8,
+                    minHeight: '100vh',
                     display: 'flex',
                     flexDirection: 'column',
                     alignItems: 'center',
+                    justifyContent: 'center',
                 }}
             >
-                <Paper elevation={3} sx={{ p: 4, width: '100%' }}>
+                <Paper
+                    elevation={0}
+                    sx={{
+                        padding: 4,
+                        display: 'flex',
+                        flexDirection: 'column',
+                        alignItems: 'center',
+                        width: '100%',
+                    }}
+                >
                     <Box
                         component="img"
                         src={process.env.PUBLIC_URL + '/Logo.png'}
@@ -87,57 +94,69 @@ export const LoginForm: React.FC = () => {
                             width: 120,
                             height: 'auto',
                             mb: 3,
-                            display: 'block',
-                            margin: '0 auto'
                         }}
                     />
-                    <Typography component="h1" variant="h5" align="center" gutterBottom>
-                        Sign In
+                    <Typography component="h1" variant="h4" gutterBottom sx={{ fontWeight: 700 }}>
+                        Welcome back
+                    </Typography>
+                    <Typography variant="body1" color="text.secondary" sx={{ mb: 4 }}>
+                        Sign in to continue to Netwrkly
                     </Typography>
                     {error && (
-                        <Alert severity="error" sx={{ mb: 2 }}>
+                        <Alert severity="error" sx={{ mb: 2, width: '100%' }}>
                             {error}
                         </Alert>
                     )}
-                    <Box component="form" onSubmit={handleSubmit} sx={{ mt: 1 }}>
-                        <TextField
-                            margin="normal"
-                            required
-                            fullWidth
-                            id="email"
-                            label="Email Address"
-                            name="email"
-                            autoComplete="email"
-                            autoFocus
-                            value={email}
-                            onChange={(e) => setEmail(e.target.value)}
-                            error={!!error}
-                        />
-                        <TextField
-                            margin="normal"
-                            required
-                            fullWidth
-                            name="password"
-                            label="Password"
-                            type="password"
-                            id="password"
-                            autoComplete="current-password"
-                            value={password}
-                            onChange={(e) => setPassword(e.target.value)}
-                            error={!!error}
-                        />
-                        <Button
-                            type="submit"
-                            fullWidth
-                            variant="contained"
-                            sx={{ mt: 3, mb: 2 }}
-                            disabled={loading}
-                        >
-                            {loading ? 'Signing In...' : 'Sign In'}
-                        </Button>
-                        <Box sx={{ textAlign: 'center' }}>
+                    <Box
+                        component="form"
+                        onSubmit={formik.handleSubmit}
+                        sx={{ width: '100%' }}
+                    >
+                        <Stack spacing={2}>
+                            <TextField
+                                fullWidth
+                                id="email"
+                                label="Email"
+                                name="email"
+                                autoComplete="email"
+                                autoFocus
+                                value={formik.values.email}
+                                onChange={formik.handleChange}
+                                error={formik.touched.email && Boolean(formik.errors.email)}
+                                helperText={formik.touched.email && formik.errors.email}
+                            />
+                            <TextField
+                                fullWidth
+                                name="password"
+                                label="Password"
+                                type="password"
+                                id="password"
+                                autoComplete="current-password"
+                                value={formik.values.password}
+                                onChange={formik.handleChange}
+                                error={formik.touched.password && Boolean(formik.errors.password)}
+                                helperText={formik.touched.password && formik.errors.password}
+                            />
+                            <Button
+                                type="submit"
+                                fullWidth
+                                variant="contained"
+                                sx={{ mt: 3, mb: 2 }}
+                                disabled={loading}
+                            >
+                                {loading ? 'Signing In...' : 'Sign In'}
+                            </Button>
+                        </Stack>
+                        <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                             <Link href="/register" variant="body2">
                                 {"Don't have an account? Sign Up"}
+                            </Link>
+                            <Link
+                                component="button"
+                                variant="body2"
+                                onClick={() => navigate('/reset-password')}
+                            >
+                                Forgot Password?
                             </Link>
                         </Box>
                     </Box>

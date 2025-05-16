@@ -7,13 +7,14 @@ import {
     onAuthStateChanged,
     sendEmailVerification,
     User as FirebaseUser,
-    updateProfile
+    updateProfile,
+    sendPasswordResetEmail
 } from 'firebase/auth';
 import { initializeApp } from 'firebase/app';
 import axios from 'axios';
 
 const firebaseConfig = {
-    apiKey: process.env.REACT_APP_FIREBASE_API_KEY,
+    apiKey: "AIzaSyBFcTGoPWxzcHQokMaRZbpXTYZoAmInVmQ",
     authDomain: "netwrkly.firebaseapp.com",
     projectId: "netwrkly",
     storageBucket: "netwrkly.appspot.com",
@@ -39,6 +40,7 @@ interface AuthContextType {
     login: (email: string, password: string) => Promise<{ success: boolean; role?: string; message: string }>;
     logout: () => Promise<void>;
     isEmailVerified: boolean;
+    resetPassword: (email: string) => Promise<{ success: boolean; message: string }>;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -142,6 +144,23 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         }
     };
 
+    const resetPassword = async (email: string) => {
+        try {
+            setError(null);
+            await sendPasswordResetEmail(auth, email);
+            return {
+                success: true,
+                message: 'Password reset email sent. Please check your inbox.'
+            };
+        } catch (err: any) {
+            setError(err.message);
+            return {
+                success: false,
+                message: err.message
+            };
+        }
+    };
+
     const value = {
         user,
         loading,
@@ -149,7 +168,8 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         signup,
         login,
         logout,
-        isEmailVerified
+        isEmailVerified,
+        resetPassword
     };
 
     return (

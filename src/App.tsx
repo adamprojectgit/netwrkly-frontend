@@ -6,6 +6,7 @@ import { AuthProvider, useAuth } from './contexts/AuthContext';
 import { BrandProfileProvider } from './contexts/BrandProfileContext';
 import { LoginForm } from './components/auth/LoginForm';
 import { RegisterForm } from './components/auth/RegisterForm';
+import { ResetPasswordForm } from './components/auth/ResetPasswordForm';
 import { BrandDashboard } from './components/dashboard/BrandDashboard';
 import { PrivateRoute } from './components/auth/PrivateRoute';
 import { CreatorDashboard } from './components/dashboard/CreatorDashboard';
@@ -93,6 +94,7 @@ const App: React.FC = () => {
                             <Routes>
                                 <Route path="/login" element={<LoginForm />} />
                                 <Route path="/register" element={<RegisterForm />} />
+                                <Route path="/reset-password" element={<ResetPasswordForm />} />
                                 <Route
                                     path="/creator/*"
                                     element={
