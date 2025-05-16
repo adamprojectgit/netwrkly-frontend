@@ -13,6 +13,7 @@ import {
     Alert,
 } from '@mui/material';
 import { useAuth } from '../../contexts/AuthContext';
+import { useNavigate } from 'react-router-dom';
 
 export const RegisterForm: React.FC = () => {
     const [email, setEmail] = useState('');
@@ -22,6 +23,7 @@ export const RegisterForm: React.FC = () => {
     const [error, setError] = useState<string | null>(null);
     const [loading, setLoading] = useState(false);
     const { signup } = useAuth();
+    const navigate = useNavigate();
 
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
@@ -34,8 +36,12 @@ export const RegisterForm: React.FC = () => {
         try {
             setError(null);
             setLoading(true);
-            await signup(email, password);
-            // Note: The signup function will handle the email verification and navigation
+            const result = await signup(email, password);
+            if (result.success) {
+                navigate('/login');
+            } else {
+                setError(result.message);
+            }
         } catch (err: any) {
             setError(err.message);
         } finally {
@@ -54,6 +60,18 @@ export const RegisterForm: React.FC = () => {
                 }}
             >
                 <Paper elevation={3} sx={{ p: 4, width: '100%' }}>
+                    <Box
+                        component="img"
+                        src={process.env.PUBLIC_URL + '/Logo.png'}
+                        alt="Netwrkly Logo"
+                        sx={{
+                            width: 120,
+                            height: 'auto',
+                            mb: 3,
+                            display: 'block',
+                            margin: '0 auto'
+                        }}
+                    />
                     <Typography component="h1" variant="h5" align="center" gutterBottom>
                         Create an Account
                     </Typography>
