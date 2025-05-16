@@ -38,16 +38,31 @@ export const LoginForm: React.FC = () => {
                 // Handle specific error cases
                 if (result.message.includes('email')) {
                     setError('Please verify your email before logging in. Check your inbox for the verification link.');
-                } else if (result.message.includes('password')) {
-                    setError('Invalid email or password. Please try again.');
+                } else if (result.message.includes('invalid-credential')) {
+                    setError('Invalid email or password. Please check your credentials and try again.');
                 } else if (result.message.includes('user-not-found')) {
                     setError('No account found with this email address.');
+                } else if (result.message.includes('too-many-requests')) {
+                    setError('Too many failed login attempts. Please try again later.');
+                } else if (result.message.includes('network-request-failed')) {
+                    setError('Network error. Please check your internet connection and try again.');
                 } else {
-                    setError(result.message || 'An error occurred during login. Please try again.');
+                    setError('Unable to sign in. Please try again.');
                 }
             }
         } catch (err: any) {
-            setError('An unexpected error occurred. Please try again.');
+            // Handle Firebase error codes
+            if (err.code === 'auth/invalid-credential') {
+                setError('Invalid email or password. Please check your credentials and try again.');
+            } else if (err.code === 'auth/user-not-found') {
+                setError('No account found with this email address.');
+            } else if (err.code === 'auth/too-many-requests') {
+                setError('Too many failed login attempts. Please try again later.');
+            } else if (err.code === 'auth/network-request-failed') {
+                setError('Network error. Please check your internet connection and try again.');
+            } else {
+                setError('An unexpected error occurred. Please try again.');
+            }
         } finally {
             setLoading(false);
         }
