@@ -13,7 +13,7 @@ import { initializeApp } from 'firebase/app';
 import axios from 'axios';
 
 const firebaseConfig = {
-    apiKey: "AIzaSyBFcTGoPWxzcHQokMaRZbpXTYZoAmInVmQ",
+    apiKey: process.env.REACT_APP_FIREBASE_API_KEY,
     authDomain: "netwrkly.firebaseapp.com",
     projectId: "netwrkly",
     storageBucket: "netwrkly.appspot.com",
