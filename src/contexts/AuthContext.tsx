@@ -32,11 +32,17 @@ interface User extends FirebaseUser {
     role: string;
 }
 
+interface RegisterData {
+    email: string;
+    password: string;
+    role: string;
+}
+
 interface AuthContextType {
     user: User | null;
     loading: boolean;
     error: string | null;
-    signup: (email: string, password: string) => Promise<{ success: boolean; message: string }>;
+    register: (data: RegisterData) => Promise<{ success: boolean; message: string }>;
     login: (email: string, password: string) => Promise<{ success: boolean; role?: string; message: string }>;
     logout: () => Promise<void>;
     isEmailVerified: boolean;
@@ -79,14 +85,34 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         return unsubscribe;
     }, [auth]);
 
-    const signup = async (email: string, password: string) => {
+    const register = async ({ email, password, role }: RegisterData) => {
         try {
             setError(null);
+            
+            // Create user in Firebase
             const userCredential = await createUserWithEmailAndPassword(auth, email, password);
             const user = userCredential.user;
             
             // Send email verification
             await sendEmailVerification(user);
+            
+            // Get Firebase ID token
+            const idToken = await user.getIdToken();
+            
+            // Register user in our backend
+            await axios.post(
+                `${API_URL}/auth/register`,
+                {
+                    email,
+                    role,
+                    firebaseUid: user.uid
+                },
+                {
+                    headers: {
+                        Authorization: `Bearer ${idToken}`
+                    }
+                }
+            );
             
             // Sign out the user until they verify their email
             await signOut(auth);
@@ -165,7 +191,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         user,
         loading,
         error,
-        signup,
+        register,
         login,
         logout,
         isEmailVerified,
