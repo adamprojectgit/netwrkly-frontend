@@ -2,7 +2,7 @@ import axios from 'axios';
 import { Brief, CreateBriefData } from '../types/brief';
 import { getAuthToken } from '../utils/auth';
 
-const API_URL = '/api/briefs';
+const API_URL = `${process.env.REACT_APP_API_URL || 'https://netwrkly-backend.onrender.com/api'}/briefs`;
 
 const getHeaders = () => ({
     'Authorization': `Bearer ${getAuthToken()}`,
