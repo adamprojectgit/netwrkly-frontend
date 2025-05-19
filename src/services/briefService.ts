@@ -6,7 +6,9 @@ const API_URL = `${process.env.REACT_APP_API_URL || 'https://netwrkly-backend.on
 
 const getHeaders = (requireAuth = true) => {
     const token = getAuthToken();
+    console.log('Getting headers, token exists:', !!token);
     if (requireAuth && !token) {
+        console.error('No token found when auth is required');
         throw new Error('No authentication token found. Please log in again.');
     }
     return {
@@ -36,9 +38,9 @@ export const fetchBriefs = async (): Promise<Brief[]> => {
 export const createBrief = async (briefData: CreateBriefData): Promise<Brief> => {
     try {
         console.log('Creating brief with data:', briefData);
-        const response = await axios.post(API_URL, briefData, {
-            headers: getHeaders(true)
-        });
+        const headers = getHeaders(true);
+        console.log('Headers for create brief:', headers);
+        const response = await axios.post(API_URL, briefData, { headers });
         console.log('Brief created successfully:', response.data);
         return response.data;
     } catch (error) {

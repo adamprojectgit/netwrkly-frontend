@@ -68,6 +68,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     useEffect(() => {
         const unsubscribe = onAuthStateChanged(auth, async (firebaseUser) => {
             if (firebaseUser) {
+                console.log('Firebase user authenticated:', firebaseUser.email);
                 const idTokenResult = await firebaseUser.getIdTokenResult();
                 const userWithRole = {
                     ...firebaseUser,
@@ -78,12 +79,15 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
                 
                 // Get and store the latest token
                 const idToken = await firebaseUser.getIdToken();
+                console.log('Storing new token in localStorage');
                 localStorage.setItem('token', idToken);
 
                 // Set up token refresh
                 const refreshInterval = setInterval(async () => {
                     try {
+                        console.log('Refreshing token...');
                         const newToken = await firebaseUser.getIdToken(true); // Force refresh
+                        console.log('Storing refreshed token in localStorage');
                         localStorage.setItem('token', newToken);
                     } catch (error) {
                         console.error('Error refreshing token:', error);
@@ -93,6 +97,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
                 // Clean up interval on unmount
                 return () => clearInterval(refreshInterval);
             } else {
+                console.log('No Firebase user, clearing token');
                 setUser(null);
                 setIsEmailVerified(false);
                 localStorage.removeItem('token');
@@ -151,10 +156,12 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     const login = async (email: string, password: string) => {
         try {
             setError(null);
+            console.log('Attempting login for:', email);
             const userCredential = await signInWithEmailAndPassword(auth, email, password);
             const user = userCredential.user;
             
             if (!user.emailVerified) {
+                console.log('Email not verified, signing out');
                 await signOut(auth);
                 return {
                     success: false,
@@ -164,9 +171,11 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
             
             const idTokenResult = await user.getIdTokenResult();
             const role = idTokenResult.claims.role as string;
+            console.log('User role:', role);
             
             // Get and store the Firebase ID token
             const idToken = await user.getIdToken();
+            console.log('Storing token after login');
             localStorage.setItem('token', idToken);
             
             return {
@@ -175,6 +184,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
                 message: 'Login successful'
             };
         } catch (err: any) {
+            console.error('Login error:', err);
             setError(err.message);
             return {
                 success: false,
