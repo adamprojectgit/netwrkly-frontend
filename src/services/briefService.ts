@@ -4,10 +4,16 @@ import { getAuthToken } from '../utils/auth';
 
 const API_URL = `${process.env.REACT_APP_API_URL || 'https://netwrkly-backend.onrender.com/api'}/briefs`;
 
-const getHeaders = () => ({
-    'Authorization': `Bearer ${getAuthToken()}`,
-    'Content-Type': 'application/json'
-});
+const getHeaders = () => {
+    const token = getAuthToken();
+    if (!token) {
+        throw new Error('No authentication token found. Please log in again.');
+    }
+    return {
+        'Authorization': `Bearer ${token}`,
+        'Content-Type': 'application/json'
+    };
+};
 
 export const fetchBriefs = async (): Promise<Brief[]> => {
     try {
