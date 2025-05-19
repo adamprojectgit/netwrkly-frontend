@@ -75,9 +75,27 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
                 } as User;
                 setUser(userWithRole);
                 setIsEmailVerified(firebaseUser.emailVerified);
+                
+                // Get and store the latest token
+                const idToken = await firebaseUser.getIdToken();
+                localStorage.setItem('token', idToken);
+
+                // Set up token refresh
+                const refreshInterval = setInterval(async () => {
+                    try {
+                        const newToken = await firebaseUser.getIdToken(true); // Force refresh
+                        localStorage.setItem('token', newToken);
+                    } catch (error) {
+                        console.error('Error refreshing token:', error);
+                    }
+                }, 55 * 60 * 1000); // Refresh every 55 minutes
+
+                // Clean up interval on unmount
+                return () => clearInterval(refreshInterval);
             } else {
                 setUser(null);
                 setIsEmailVerified(false);
+                localStorage.removeItem('token');
             }
             setLoading(false);
         });
@@ -147,6 +165,10 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
             const idTokenResult = await user.getIdTokenResult();
             const role = idTokenResult.claims.role as string;
             
+            // Get and store the Firebase ID token
+            const idToken = await user.getIdToken();
+            localStorage.setItem('token', idToken);
+            
             return {
                 success: true,
                 role,
@@ -164,6 +186,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     const logout = async () => {
         try {
             await signOut(auth);
+            localStorage.removeItem('token'); // Remove the token on logout
         } catch (err: any) {
             setError(err.message);
             throw err;  
