@@ -20,20 +20,20 @@ export const ChatProvider: React.FC<{ children: React.ReactNode }> = ({ children
     const { user } = useAuth();
     if (!user) throw new Error('ChatProvider requires authenticated user');
 
-    const getConvId = (uid: string) => {
-        const ids = [user.uid, uid].sort();
-        return `${ids[0]}_${ids[1]}`;
+    const getConvPath = (otherUid: string) => {
+        const [a, b] = [user.uid, otherUid].sort();
+        return `conversations/${a}/${b}/messages`;
     };
 
     const sendMessage = async (otherUid: string, text: string) => {
-        const convId = getConvId(otherUid);
+        const convPath = getConvPath(otherUid);
         const msg: Message = { senderUid: user.uid, text, timestamp: Date.now() };
-        await push(ref(db, `conversations/${convId}/messages`), msg);
+        await push(ref(db, convPath), msg);
     };
 
     const subscribe = (otherUid: string, callback: (msg: Message) => void) => {
-        const convId = getConvId(otherUid);
-        const msgsRef = query(ref(db, `conversations/${convId}/messages`), orderByChild('timestamp'));
+        const convPath = getConvPath(otherUid);
+        const msgsRef = query(ref(db, convPath), orderByChild('timestamp'));
         const listener = onChildAdded(msgsRef, snap => callback(snap.val()));
         return () => off(msgsRef, 'child_added', listener);
     };
