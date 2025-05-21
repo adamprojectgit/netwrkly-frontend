@@ -67,35 +67,95 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
     useEffect(() => {
         const unsubscribe = onAuthStateChanged(auth, async (firebaseUser) => {
+            console.log('Auth state changed, user:', firebaseUser?.email);
             if (firebaseUser) {
-                console.log('Firebase user authenticated:', firebaseUser.email);
-                const idTokenResult = await firebaseUser.getIdTokenResult();
-                const userWithRole = {
-                    ...firebaseUser,
-                    role: idTokenResult.claims.role as string
-                } as User;
-                setUser(userWithRole);
-                setIsEmailVerified(firebaseUser.emailVerified);
-                
-                // Get and store the latest token
-                const idToken = await firebaseUser.getIdToken();
-                console.log('Storing new token in localStorage');
-                localStorage.setItem('token', idToken);
-
-                // Set up token refresh
-                const refreshInterval = setInterval(async () => {
-                    try {
-                        console.log('Refreshing token...');
-                        const newToken = await firebaseUser.getIdToken(true); // Force refresh
-                        console.log('Storing refreshed token in localStorage');
-                        localStorage.setItem('token', newToken);
-                    } catch (error) {
-                        console.error('Error refreshing token:', error);
+                try {
+                    console.log('Firebase user authenticated:', firebaseUser.email);
+                    const idTokenResult = await firebaseUser.getIdTokenResult();
+                    const role = idTokenResult.claims.role as string;
+                    
+                    // If no role is set, try to register the user
+                    if (!role) {
+                        try {
+                            const idToken = await firebaseUser.getIdToken();
+                            // Try to register the user with BRAND role by default
+                            await axios.post(
+                                `${API_URL}/auth/register`,
+                                {
+                                    email: firebaseUser.email,
+                                    role: 'BRAND',
+                                    firebaseUid: firebaseUser.uid
+                                },
+                                {
+                                    headers: {
+                                        Authorization: `Bearer ${idToken}`
+                                    }
+                                }
+                            );
+                            // Get updated token with role
+                            const updatedTokenResult = await firebaseUser.getIdTokenResult(true);
+                            const userWithRole = {
+                                ...firebaseUser,
+                                role: updatedTokenResult.claims.role as string
+                            } as User;
+                            setUser(userWithRole);
+                        } catch (error) {
+                            console.error('Error registering user:', error);
+                            // If registration fails, sign out the user
+                            await signOut(auth);
+                            setError('Failed to complete registration. Please try again.');
+                            return;
+                        }
+                    } else {
+                        const userWithRole = {
+                            ...firebaseUser,
+                            role
+                        } as User;
+                        setUser(userWithRole);
                     }
-                }, 55 * 60 * 1000); // Refresh every 55 minutes
+                    
+                    setIsEmailVerified(firebaseUser.emailVerified);
+                    
+                    // Get and store the latest token
+                    const idToken = await firebaseUser.getIdToken();
+                    console.log('Got new token, length:', idToken.length);
+                    console.log('Token starts with:', idToken.substring(0, 20));
+                    localStorage.setItem('token', idToken.trim());
+                    
+                    // Verify token was stored
+                    const storedToken = localStorage.getItem('token');
+                    if (!storedToken) {
+                        console.error('Failed to store token in localStorage');
+                    } else {
+                        console.log('Token stored successfully in localStorage, length:', storedToken.length);
+                        console.log('Stored token starts with:', storedToken.substring(0, 20));
+                    }
 
-                // Clean up interval on unmount
-                return () => clearInterval(refreshInterval);
+                    // Set up token refresh
+                    const refreshInterval = setInterval(async () => {
+                        try {
+                            console.log('Refreshing token...');
+                            const newToken = await firebaseUser.getIdToken(true); // Force refresh
+                            console.log('Got refreshed token, length:', newToken.length);
+                            localStorage.setItem('token', newToken);
+                            
+                            // Verify refreshed token was stored
+                            const refreshedStoredToken = localStorage.getItem('token');
+                            if (!refreshedStoredToken) {
+                                console.error('Failed to store refreshed token in localStorage');
+                            } else {
+                                console.log('Refreshed token stored successfully in localStorage');
+                            }
+                        } catch (error) {
+                            console.error('Error refreshing token:', error);
+                        }
+                    }, 55 * 60 * 1000); // Refresh every 55 minutes
+
+                    // Clean up interval on unmount
+                    return () => clearInterval(refreshInterval);
+                } catch (error) {
+                    console.error('Error in auth state change handler:', error);
+                }
             } else {
                 console.log('No Firebase user, clearing token');
                 setUser(null);
@@ -106,7 +166,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         });
 
         return unsubscribe;
-    }, [auth]);
+    }, []);
 
     const register = async ({ email, password, role }: RegisterData) => {
         try {
@@ -177,6 +237,15 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
             const idToken = await user.getIdToken();
             console.log('Storing token after login');
             localStorage.setItem('token', idToken);
+            
+            // Verify token was stored
+            const storedToken = localStorage.getItem('token');
+            if (!storedToken) {
+                console.error('Token was not stored properly');
+                throw new Error('Failed to store authentication token');
+            }
+            
+            console.log('Token stored successfully, length:', storedToken.length);
             
             return {
                 success: true,
