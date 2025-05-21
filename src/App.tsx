@@ -4,13 +4,15 @@ import { ThemeProvider, createTheme } from '@mui/material';
 import CssBaseline from '@mui/material/CssBaseline';
 import { AuthProvider, useAuth } from './contexts/AuthContext';
 import { BrandProfileProvider } from './contexts/BrandProfileContext';
+import { CreatorProfileProvider } from './contexts/CreatorProfileContext';
+import { ChatProvider } from './contexts/ChatContext';
 import { LoginForm } from './components/auth/LoginForm';
 import { RegisterForm } from './components/auth/RegisterForm';
 import { ResetPasswordForm } from './components/auth/ResetPasswordForm';
 import { BrandDashboard } from './components/dashboard/BrandDashboard';
-import { PrivateRoute } from './components/auth/PrivateRoute';
 import { CreatorDashboard } from './components/dashboard/CreatorDashboard';
-import { CreatorProfileProvider } from './contexts/CreatorProfileContext';
+import { ChatPage } from './components/chat/ChatPage';
+import { PrivateRoute } from './components/auth/PrivateRoute';
 
 const theme = createTheme({
     palette: {
@@ -85,40 +87,50 @@ const theme = createTheme({
 
 const App: React.FC = () => {
   return (
-        <Router>
-            <ThemeProvider theme={theme}>
-                <CssBaseline />
-                <AuthProvider>
-                    <CreatorProfileProvider>
-                        <BrandProfileProvider>
-                            <Routes>
-                                <Route path="/login" element={<LoginForm />} />
-                                <Route path="/register" element={<RegisterForm />} />
-                                <Route path="/reset-password" element={<ResetPasswordForm />} />
-                                <Route
-                                    path="/creator/*"
-                                    element={
-                                        <PrivateRoute allowedRoles={['CREATOR']}>
-                                            <CreatorDashboard />
-                                        </PrivateRoute>
-                                    }
-                                />
-                                <Route
-                                    path="/brand/*"
-                                    element={
-                                        <PrivateRoute allowedRoles={['BRAND']}>
-                                            <BrandDashboard />
-                                        </PrivateRoute>
-                                    }
-                                />
-                                <Route path="/" element={<Navigate to="/login" replace />} />
-                            </Routes>
-                        </BrandProfileProvider>
-                    </CreatorProfileProvider>
-                </AuthProvider>
-            </ThemeProvider>
-        </Router>
-    );
+    <Router>
+      <ThemeProvider theme={theme}>
+        <CssBaseline />
+        <AuthProvider>
+          <CreatorProfileProvider>
+            <BrandProfileProvider>
+              <ChatProvider>
+                <Routes>
+                  <Route path="/login" element={<LoginForm />} />
+                  <Route path="/register" element={<RegisterForm />} />
+                  <Route path="/reset-password" element={<ResetPasswordForm />} />
+                  <Route
+                    path="/creator/*"
+                    element={
+                      <PrivateRoute allowedRoles={['CREATOR']}>
+                        <CreatorDashboard />
+                      </PrivateRoute>
+                    }
+                  />
+                  <Route
+                    path="/brand/*"
+                    element={
+                      <PrivateRoute allowedRoles={['BRAND']}>
+                        <BrandDashboard />
+                      </PrivateRoute>
+                    }
+                  />
+                  <Route
+                    path="/chat/:otherUid"
+                    element={
+                      <PrivateRoute allowedRoles={['CREATOR', 'BRAND']}>
+                        <ChatPage />
+                      </PrivateRoute>
+                    }
+                  />
+                  <Route path="/" element={<Navigate to="/login" replace />} />
+                </Routes>
+              </ChatProvider>
+            </BrandProfileProvider>
+          </CreatorProfileProvider>
+        </AuthProvider>
+      </ThemeProvider>
+    </Router>
+  );
 };
 
 export default App;
