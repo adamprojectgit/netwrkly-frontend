@@ -225,37 +225,58 @@ export const BrandProfile: React.FC = () => {
                     <Box sx={{ position: 'relative' }}>
                         <Avatar
                             src={profile.logoUrl}
-                            sx={{ width: 100, height: 100 }}
+                            sx={{ 
+                                width: 100, 
+                                height: 100,
+                                cursor: 'pointer',
+                                '&:hover': {
+                                    opacity: 0.8
+                                }
+                            }}
                             alt="Company Logo"
+                            onClick={() => {
+                                console.log('Avatar clicked');
+                                const fileInput = document.getElementById('logo-upload') as HTMLInputElement;
+                                if (fileInput) {
+                                    fileInput.click();
+                                } else {
+                                    console.error('File input element not found');
+                                }
+                            }}
                         />
                         <input
                             accept="image/*"
                             type="file"
                             id="logo-upload"
-                            hidden
-                            onChange={handleFileSelect}
-                            onClick={(e) => {
-                                // Reset the value so the same file can be selected again
-                                (e.target as HTMLInputElement).value = '';
+                            style={{ display: 'none' }}
+                            onChange={(e) => {
+                                console.log('File input onChange triggered');
+                                handleFileSelect(e);
                             }}
                         />
-                        <label htmlFor="logo-upload">
-                            <IconButton
-                                component="span"
-                                sx={{
-                                    position: 'absolute',
-                                    bottom: 0,
-                                    right: 0,
-                                    bgcolor: 'background.paper'
-                                }}
-                                onClick={() => {
-                                    // Trigger the file input click
-                                    document.getElementById('logo-upload')?.click();
-                                }}
-                            >
-                                <PhotoCamera />
-                            </IconButton>
-                        </label>
+                        <IconButton
+                            component="span"
+                            sx={{
+                                position: 'absolute',
+                                bottom: 0,
+                                right: 0,
+                                bgcolor: 'background.paper',
+                                '&:hover': {
+                                    bgcolor: 'action.hover'
+                                }
+                            }}
+                            onClick={() => {
+                                console.log('IconButton clicked');
+                                const fileInput = document.getElementById('logo-upload') as HTMLInputElement;
+                                if (fileInput) {
+                                    fileInput.click();
+                                } else {
+                                    console.error('File input element not found');
+                                }
+                            }}
+                        >
+                            <PhotoCamera />
+                        </IconButton>
                     </Box>
                     <Box>
                         <Typography variant="h5" gutterBottom>
