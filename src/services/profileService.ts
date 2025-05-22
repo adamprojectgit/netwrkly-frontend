@@ -11,7 +11,7 @@ export interface BrandProfileData {
     logoUrl: string;
 }
 
-const API_URL = '/api/brand-profile';
+const API_URL = process.env.REACT_APP_API_URL || 'https://netwrkly-backend.onrender.com/api/brand-profile';
 
 export const profileService = {
     async getProfile(): Promise<BrandProfileData> {
