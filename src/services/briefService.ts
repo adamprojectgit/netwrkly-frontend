@@ -7,14 +7,20 @@ const API_URL = `${process.env.REACT_APP_API_URL || 'https://netwrkly-backend.on
 const getHeaders = (requireAuth = true) => {
     const token = getAuthToken();
     console.log('Getting headers, token exists:', !!token);
+    console.log('Token length:', token?.length || 0);
     if (requireAuth && !token) {
         console.error('No token found when auth is required');
         throw new Error('No authentication token found. Please log in again.');
     }
-    return {
-        'Authorization': token ? `Bearer ${token}` : undefined,
+    const headers = {
+        'Authorization': token ? `Bearer ${token.trim()}` : undefined,
         'Content-Type': 'application/json'
     };
+    console.log('Headers being sent:', {
+        ...headers,
+        'Authorization': headers.Authorization ? `${headers.Authorization.substring(0, 20)}...` : undefined
+    });
+    return headers;
 };
 
 export const fetchBriefs = async (): Promise<Brief[]> => {
