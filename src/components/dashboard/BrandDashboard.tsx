@@ -31,7 +31,6 @@ import {
 import HomeIcon from '@mui/icons-material/Home';
 import ChatIcon from '@mui/icons-material/Chat';
 import GroupsIcon from '@mui/icons-material/Groups';
-import HandshakeIcon from '@mui/icons-material/Handshake';
 import AccountCircleIcon from '@mui/icons-material/AccountCircle';
 import LogoutIcon from '@mui/icons-material/Logout';
 import SearchIcon from '@mui/icons-material/Search';
@@ -46,6 +45,8 @@ import { createBrief, fetchBriefs, updateBriefStatus } from '../../services/brie
 import { CreateBriefData, Brief, BriefStatus } from '../../types/brief';
 import { BrandProfile } from '../profile/BrandProfile';
 import { useBrandProfile } from '../../contexts/BrandProfileContext';
+import { BrandHomepage } from '../homepage/BrandHomepage';
+import { Communities } from '../communities/Communities';
 
 const drawerWidth = 240;
 
@@ -188,115 +189,8 @@ export const BrandDashboard: React.FC = () => {
 
     const renderMainContent = () => {
         switch (selectedTab) {
-            case 0: // Homepage - Briefs
-                return (
-                    <>
-                        <Box sx={{ display: 'flex', justifyContent: 'space-between', mb: 3 }}>
-                            <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
-                                <Typography color="primary">My Briefs</Typography>
-                                <Button
-                                    variant="contained"
-                                    startIcon={<AddIcon />}
-                                    color="primary"
-                                    onClick={() => setIsCreateBriefOpen(true)}
-                                >
-                                    Create New Brief
-                                </Button>
-                            </Box>
-                            <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
-                                <TextField
-                                    size="small"
-                                    placeholder="Search briefs..."
-                                    value={searchQuery}
-                                    onChange={(e) => setSearchQuery(e.target.value)}
-                                    InputProps={{
-                                        startAdornment: (
-                                            <InputAdornment position="start">
-                                                <SearchIcon />
-                                            </InputAdornment>
-                                        ),
-                                    }}
-                                />
-                            </Box>
-                        </Box>
-
-                        {error && (
-                            <Alert severity="error" sx={{ mb: 2 }}>
-                                {error}
-                            </Alert>
-                        )}
-
-                        {isLoading ? (
-                            <Box sx={{ display: 'flex', justifyContent: 'center', my: 4 }}>
-                                <CircularProgress />
-                            </Box>
-                        ) : (
-                            <Stack spacing={2}>
-                                {briefs.map((brief) => (
-                                    <Card key={brief.id}>
-                                        <CardContent>
-                                            <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', mb: 2 }}>
-                                                <Typography variant="h6" component="div">
-                                                    {brief.title}
-                                                </Typography>
-                                                <Box>
-                                                    <Chip 
-                                                        label={brief.status} 
-                                                        color={getStatusColor(brief.status)}
-                                                        size="small"
-                                                        sx={{ mr: 1 }}
-                                                    />
-                                                    {brief.status === BriefStatus.DRAFT && (
-                                                        <Button
-                                                            size="small"
-                                                            variant="outlined"
-                                                            color="primary"
-                                                            onClick={() => handleActivateBrief(brief.id)}
-                                                            sx={{ mr: 1 }}
-                                                        >
-                                                            Activate
-                                                        </Button>
-                                                    )}
-                                                    <IconButton size="small">
-                                                        <EditIcon fontSize="small" />
-                                                    </IconButton>
-                                                    <IconButton size="small">
-                                                        <DeleteIcon fontSize="small" />
-                                                    </IconButton>
-                                                </Box>
-                                            </Box>
-                                            <Typography color="text.secondary" sx={{ mb: 2 }}>
-                                                {brief.ask}
-                                            </Typography>
-                                            <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                                                <Typography variant="body2" color="text.secondary">
-                                                    Budget: {brief.budget}
-                                                </Typography>
-                                                <Typography variant="body2" color="text.secondary">
-                                                    Responses: {brief.responses}
-                                                </Typography>
-                                                <Typography variant="body2" color="text.secondary">
-                                                    Created: {brief.createdAt}
-                                                </Typography>
-                                            </Box>
-                                        </CardContent>
-                                    </Card>
-                                ))}
-                                {briefs.length === 0 && !error && (
-                                    <Typography color="text.secondary" textAlign="center">
-                                        No briefs found. Create your first brief to get started!
-                                    </Typography>
-                                )}
-                            </Stack>
-                        )}
-
-                        <CreateBriefDialog
-                            open={isCreateBriefOpen}
-                            onClose={() => setIsCreateBriefOpen(false)}
-                            onSubmit={handleCreateBrief}
-                        />
-                    </>
-                );
+            case 0: // Homepage
+                return <BrandHomepage />;
             case 1: // Chats
                 return (
                     <Box
@@ -315,21 +209,22 @@ export const BrandDashboard: React.FC = () => {
                             No Active Chats
                         </Typography>
                         <Typography variant="body1" color="text.secondary" sx={{ maxWidth: 450, mb: 2 }}>
-                            Start matchmaking to connect with potential creators and begin conversations about your briefs.
+                            Start posting briefs to connect with potential creators and begin conversations.
                         </Typography>
                         <Button
                             variant="contained"
                             color="primary"
-                            startIcon={<HandshakeIcon />}
-                            onClick={() => handleTabSelect(3)} // Navigate to Matchmakers tab
+                            startIcon={<AddIcon />}
+                            onClick={() => handleTabSelect(0)} // Navigate to Homepage tab
                         >
-                            Start Matchmaking
+                            Post a Brief
                         </Button>
                     </Box>
                 );
-            case 4: // Profile
+            case 2: // Communities
+                return <Communities />;
+            case 3: // Profile
                 return <BrandProfile />;
-            // Add other cases for different tabs
             default:
                 return null;
         }
@@ -390,12 +285,6 @@ export const BrandDashboard: React.FC = () => {
                     </ListItemButton>
                     <ListItemButton selected={selectedTab === 3} onClick={() => handleTabSelect(3)}>
                         <ListItemIcon>
-                            <HandshakeIcon />
-                        </ListItemIcon>
-                        <ListItemText primary="Matchmakers" />
-                    </ListItemButton>
-                    <ListItemButton selected={selectedTab === 4} onClick={() => handleTabSelect(4)}>
-                        <ListItemIcon>
                             <AccountCircleIcon />
                         </ListItemIcon>
                         <ListItemText primary="Profile" />
@@ -415,7 +304,7 @@ export const BrandDashboard: React.FC = () => {
                 <Box sx={{ mb: 3, display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
                     <Box>
                         <Typography variant="h5" gutterBottom>
-                            {['Homepage', 'Chats', 'Communities', 'Matchmakers', 'Profile'][selectedTab]}
+                            {['Homepage', 'Chats', 'Communities', 'Profile'][selectedTab]}
                         </Typography>
                     </Box>
                 </Box>
