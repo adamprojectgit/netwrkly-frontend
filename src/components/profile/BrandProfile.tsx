@@ -142,19 +142,12 @@ export const BrandProfile: React.FC = () => {
     };
 
     const handleFileSelect = async (event: React.ChangeEvent<HTMLInputElement>) => {
-        console.log('File select event triggered');
         if (event.target.files && event.target.files[0]) {
             const file = event.target.files[0];
-            console.log('File selected:', {
-                name: file.name,
-                size: file.size,
-                type: file.type,
-                lastModified: file.lastModified
-            });
             setSelectedFile(file);
 
             try {
-                console.log('Starting logo upload...');
+                console.log('Uploading logo file:', file.name, 'Size:', file.size, 'Type:', file.type);
                 const logoUrl = await profileService.uploadLogo(file);
                 console.log('Logo upload successful, URL:', logoUrl);
                 setProfile(prev => ({
@@ -171,8 +164,7 @@ export const BrandProfile: React.FC = () => {
                 console.error('Error details:', {
                     message: error.message,
                     response: error.response?.data,
-                    status: error.response?.status,
-                    headers: error.response?.headers
+                    status: error.response?.status
                 });
                 setSnackbar({
                     open: true,
@@ -180,8 +172,6 @@ export const BrandProfile: React.FC = () => {
                     severity: 'error'
                 });
             }
-        } else {
-            console.log('No file selected or event.target.files is null');
         }
     };
 
@@ -234,10 +224,6 @@ export const BrandProfile: React.FC = () => {
                             id="logo-upload"
                             hidden
                             onChange={handleFileSelect}
-                            onClick={(e) => {
-                                // Reset the value so the same file can be selected again
-                                (e.target as HTMLInputElement).value = '';
-                            }}
                         />
                         <label htmlFor="logo-upload">
                             <IconButton
@@ -247,10 +233,6 @@ export const BrandProfile: React.FC = () => {
                                     bottom: 0,
                                     right: 0,
                                     bgcolor: 'background.paper'
-                                }}
-                                onClick={() => {
-                                    // Trigger the file input click
-                                    document.getElementById('logo-upload')?.click();
                                 }}
                             >
                                 <PhotoCamera />
