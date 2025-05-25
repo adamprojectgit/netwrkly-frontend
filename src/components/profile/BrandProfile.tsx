@@ -53,7 +53,6 @@ export const BrandProfile: React.FC = () => {
     const [isLoading, setIsLoading] = useState(true);
     const [isSaving, setIsSaving] = useState(false);
     const [selectedFile, setSelectedFile] = useState<File | null>(null);
-    const [isUploading, setIsUploading] = useState(false);
     const [errors, setErrors] = useState<FormErrors>({});
     const [snackbar, setSnackbar] = useState({
         open: false,
@@ -155,28 +154,13 @@ export const BrandProfile: React.FC = () => {
             setSelectedFile(file);
 
             try {
-                setIsUploading(true);
                 console.log('Starting logo upload...');
-                const form = new FormData();
-                form.append('file', file);
-                
-                const response = await fetch('/api/brand-profiles/me/logo', {
-                    method: 'PUT',
-                    body: form,
-                });
-
-                if (!response.ok) {
-                    throw new Error(`Upload failed: ${response.statusText}`);
-                }
-
-                const logoUrl = await response.text();
+                const logoUrl = await profileService.uploadLogo(file);
                 console.log('Logo upload successful, URL:', logoUrl);
-                
                 setProfile(prev => ({
                     ...prev,
                     logoUrl
                 }));
-                
                 setSnackbar({
                     open: true,
                     message: 'Logo uploaded successfully',
@@ -192,11 +176,9 @@ export const BrandProfile: React.FC = () => {
                 });
                 setSnackbar({
                     open: true,
-                    message: `Failed to upload logo: ${error.message}`,
+                    message: `Failed to upload logo: ${error.response?.data || error.message}`,
                     severity: 'error'
                 });
-            } finally {
-                setIsUploading(false);
             }
         } else {
             console.log('No file selected or event.target.files is null');
@@ -244,7 +226,11 @@ export const BrandProfile: React.FC = () => {
                         <Button
                             component="label"
                             sx={{ p: 0, minWidth: 'auto' }}
-                            disabled={isUploading}
+                            onClick={(e) => {
+                                e.preventDefault();
+                                e.stopPropagation();
+                                console.log('Button clicked');
+                            }}
                         >
                             <Avatar
                                 src={profile.logoUrl}
@@ -263,8 +249,26 @@ export const BrandProfile: React.FC = () => {
                                 type="file"
                                 id="logo-upload"
                                 style={{ display: 'none' }}
-                                onChange={handleFileSelect}
-                                disabled={isUploading}
+                                onClick={(e) => {
+                                    console.log('File input clicked');
+                                    e.stopPropagation();
+                                }}
+                                onChange={(e) => {
+                                    console.log('File input onChange triggered');
+                                    e.stopPropagation();
+                                    if (e.target.files && e.target.files[0]) {
+                                        const file = e.target.files[0];
+                                        console.log('File selected:', {
+                                            name: file.name,
+                                            size: file.size,
+                                            type: file.type,
+                                            lastModified: file.lastModified
+                                        });
+                                        handleFileSelect(e);
+                                    } else {
+                                        console.log('No file selected');
+                                    }
+                                }}
                             />
                         </Button>
                         <IconButton
@@ -278,29 +282,34 @@ export const BrandProfile: React.FC = () => {
                                     bgcolor: 'action.hover'
                                 }
                             }}
-                            disabled={isUploading}
                         >
                             <PhotoCamera />
                             <input
                                 accept="image/*"
                                 type="file"
                                 style={{ display: 'none' }}
-                                onChange={handleFileSelect}
-                                disabled={isUploading}
-                            />
-                        </IconButton>
-                        {isUploading && (
-                            <CircularProgress
-                                size={24}
-                                sx={{
-                                    position: 'absolute',
-                                    top: '50%',
-                                    left: '50%',
-                                    marginTop: '-12px',
-                                    marginLeft: '-12px',
+                                onClick={(e) => {
+                                    console.log('IconButton file input clicked');
+                                    e.stopPropagation();
+                                }}
+                                onChange={(e) => {
+                                    console.log('IconButton file input onChange triggered');
+                                    e.stopPropagation();
+                                    if (e.target.files && e.target.files[0]) {
+                                        const file = e.target.files[0];
+                                        console.log('File selected from icon button:', {
+                                            name: file.name,
+                                            size: file.size,
+                                            type: file.type,
+                                            lastModified: file.lastModified
+                                        });
+                                        handleFileSelect(e);
+                                    } else {
+                                        console.log('No file selected from icon button');
+                                    }
                                 }}
                             />
-                        )}
+                        </IconButton>
                     </Box>
                     <Box>
                         <Typography variant="h5" gutterBottom>
