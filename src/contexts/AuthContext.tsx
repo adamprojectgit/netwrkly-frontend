@@ -1,5 +1,6 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
 import { 
+    getAuth, 
     createUserWithEmailAndPassword, 
     signInWithEmailAndPassword, 
     signOut, 
@@ -9,8 +10,21 @@ import {
     updateProfile,
     sendPasswordResetEmail
 } from 'firebase/auth';
-import { auth } from '../config/firebase';
+import { initializeApp } from 'firebase/app';
 import axios from 'axios';
+
+const firebaseConfig = {
+    apiKey: "AIzaSyBFcTGoPWxzcHQokMaRZbpXTYZoAmInVmQ",
+    authDomain: "netwrkly.firebaseapp.com",
+    projectId: "netwrkly",
+    storageBucket: "netwrkly.appspot.com",
+    messagingSenderId: "1234567890",
+    appId: "1:1234567890:web:abcdef1234567890"
+};
+
+// Initialize Firebase
+const app = initializeApp(firebaseConfig);
+const auth = getAuth(app);
 
 const API_URL = 'https://netwrkly-backend.onrender.com/api';
 
