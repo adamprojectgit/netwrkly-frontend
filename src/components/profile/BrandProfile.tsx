@@ -147,9 +147,7 @@ export const BrandProfile: React.FC = () => {
             setSelectedFile(file);
 
             try {
-                console.log('Uploading logo file:', file.name, 'Size:', file.size, 'Type:', file.type);
                 const logoUrl = await profileService.uploadLogo(file);
-                console.log('Logo upload successful, URL:', logoUrl);
                 setProfile(prev => ({
                     ...prev,
                     logoUrl
@@ -159,16 +157,10 @@ export const BrandProfile: React.FC = () => {
                     message: 'Logo uploaded successfully',
                     severity: 'success'
                 });
-            } catch (error: any) {
-                console.error('Logo upload failed:', error);
-                console.error('Error details:', {
-                    message: error.message,
-                    response: error.response?.data,
-                    status: error.response?.status
-                });
+            } catch (error) {
                 setSnackbar({
                     open: true,
-                    message: `Failed to upload logo: ${error.response?.data || error.message}`,
+                    message: 'Failed to upload logo',
                     severity: 'error'
                 });
             }
