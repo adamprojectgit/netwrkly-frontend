@@ -93,38 +93,38 @@ const App: React.FC = () => {
         <AuthProvider>
           <CreatorProfileProvider>
             <BrandProfileProvider>
-              <ChatProvider>
-                <Routes>
-                  <Route path="/login" element={<LoginForm />} />
-                  <Route path="/register" element={<RegisterForm />} />
-                  <Route path="/reset-password" element={<ResetPasswordForm />} />
-                  <Route
-                    path="/creator/*"
-                    element={
-                      <PrivateRoute allowedRoles={['CREATOR']}>
-                        <CreatorDashboard />
-                      </PrivateRoute>
-                    }
-                  />
-                  <Route
-                    path="/brand/*"
-                    element={
-                      <PrivateRoute allowedRoles={['BRAND']}>
-                        <BrandDashboard />
-                      </PrivateRoute>
-                    }
-                  />
-                  <Route
-                    path="/chat/:otherUid"
-                    element={
-                      <PrivateRoute allowedRoles={['CREATOR', 'BRAND']}>
+              <Routes>
+                <Route path="/login" element={<LoginForm />} />
+                <Route path="/register" element={<RegisterForm />} />
+                <Route path="/reset-password" element={<ResetPasswordForm />} />
+                <Route
+                  path="/creator/*"
+                  element={
+                    <PrivateRoute allowedRoles={['CREATOR']}>
+                      <CreatorDashboard />
+                    </PrivateRoute>
+                  }
+                />
+                <Route
+                  path="/brand/*"
+                  element={
+                    <PrivateRoute allowedRoles={['BRAND']}>
+                      <BrandDashboard />
+                    </PrivateRoute>
+                  }
+                />
+                <Route
+                  path="/chat/:otherUid"
+                  element={
+                    <PrivateRoute allowedRoles={['CREATOR', 'BRAND']}>
+                      <ChatProvider>
                         <ChatPage />
-                      </PrivateRoute>
-                    }
-                  />
-                  <Route path="/" element={<Navigate to="/login" replace />} />
-                </Routes>
-              </ChatProvider>
+                      </ChatProvider>
+                    </PrivateRoute>
+                  }
+                />
+                <Route path="/" element={<Navigate to="/login" replace />} />
+              </Routes>
             </BrandProfileProvider>
           </CreatorProfileProvider>
         </AuthProvider>
