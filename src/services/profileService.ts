@@ -11,12 +11,12 @@ export interface BrandProfileData {
     logoUrl: string;
 }
 
-const API_URL = '/api/brand-profile';
+const API_URL = process.env.REACT_APP_API_URL || 'https://netwrkly-backend.onrender.com/api';
 
 export const profileService = {
     async getProfile(): Promise<BrandProfileData> {
         try {
-            const response = await axios.get(API_URL, {
+            const response = await axios.get(`${API_URL}/brand-profiles/me`, {
                 headers: {
                     'Authorization': `Bearer ${getAuthToken()}`
                 }
@@ -34,7 +34,7 @@ export const profileService = {
 
     async updateProfile(profileData: BrandProfileData): Promise<BrandProfileData> {
         try {
-            const response = await axios.post(API_URL, profileData, {
+            const response = await axios.put(`${API_URL}/brand-profiles/me`, profileData, {
                 headers: {
                     'Authorization': `Bearer ${getAuthToken()}`,
                     'Content-Type': 'application/json'
@@ -52,7 +52,7 @@ export const profileService = {
             const formData = new FormData();
             formData.append('file', file);
 
-            const response = await axios.post(`${API_URL}/logo`, formData, {
+            const response = await axios.post(`${API_URL}/brand-profiles/me/logo`, formData, {
                 headers: {
                     'Authorization': `Bearer ${getAuthToken()}`,
                     'Content-Type': 'multipart/form-data'
@@ -67,7 +67,7 @@ export const profileService = {
 
     async deleteLogo(filename: string): Promise<void> {
         try {
-            await axios.delete(`${API_URL}/logo/${filename}`, {
+            await axios.delete(`${API_URL}/brand-profiles/me/logo/${filename}`, {
                 headers: {
                     'Authorization': `Bearer ${getAuthToken()}`
                 }
